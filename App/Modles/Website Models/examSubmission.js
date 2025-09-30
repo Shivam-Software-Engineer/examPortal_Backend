@@ -12,7 +12,7 @@ const questionSchema = new mongoose.Schema({
   videoLink: { type: String },
   imageLink: { type: String },
 
-  selected: { type: Number, default: null },
+  selected: { type: mongoose.Schema.Types.Mixed, default: null },
   status: { type: Boolean, required: true }, // true if correct
   timeTaken: { type: Number, default: 0 } // seconds
 });

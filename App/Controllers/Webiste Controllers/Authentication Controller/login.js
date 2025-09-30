@@ -13,6 +13,11 @@ const loginController = async (req, res) => {
       return res.status(404).json({ status: 0, message: "User not found" });
     }
 
+    // 2️⃣ Check if blocked
+    if (user.status === "blocked") {
+      return res.status(403).json({ status: 0, message: "User is blocked. Contact admin." });
+    }
+
     // 2️⃣ Manual login
     if (loginMethod === "manual") {
       // signup method check
@@ -45,7 +50,8 @@ const loginController = async (req, res) => {
       name: user.name,
       email: user.email,
       signupMethod: user.signupMethod,
-      phoneNumber: user.phoneNumber
+      phoneNumber: user.phoneNumber,
+      status: user.status,
     };
 
     return res.status(200).json({ status: 1, message: "Login successful", user: responseUser });

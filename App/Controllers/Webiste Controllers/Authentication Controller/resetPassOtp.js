@@ -21,6 +21,34 @@ const resetotp = async (req, res) => {
       });
     }
 
+    // 🔒 Check if user is blocked
+    if (user.status === "blocked") {
+      // Send blocked email
+      try {
+        await transporter.sendMail({
+          from: '"Maxiwise Learning" <info@maxiwiselearning.online>',
+          to: user.email,
+          subject: "Account Blocked Notification",
+          text: `Hi ${user.name || "User"}, your account is currently blocked. Please contact support for assistance.`,
+          html: `
+            <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 520px; margin: auto; padding: 24px; border-radius: 12px; background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border:1px solid #eee;">
+              <h2 style="text-align:center; color:#D9534F; margin-bottom:20px;">Maxiwise Learning</h2>
+              <p style="font-size:16px; color:#333;">Hi <strong>${user.name || "User"}</strong>,</p>
+              <p style="font-size:16px; color:#333;">Your account is currently <strong>blocked</strong>. For assistance, please contact our support team.</p>
+              <p style="font-size:14px; color:#555; margin-top:20px;">© ${new Date().getFullYear()} Maxiwise Learning. All rights reserved.</p>
+            </div>
+          `
+        });
+      } catch (mailErr) {
+        console.error("Error sending blocked account email:", mailErr);
+      }
+
+      return res.status(403).json({
+        status: 0,
+        message: "Your account is blocked. Please contact admin.",
+      });
+    }
+
     // ✅ 5-digit OTP generate
     const otp = Math.floor(10000 + Math.random() * 90000);
 

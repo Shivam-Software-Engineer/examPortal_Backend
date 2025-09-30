@@ -30,6 +30,15 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: "manual", // ✅ Manual signup ke liye default
     },
+    status: {
+      type: String,
+      enum: ["active", "blocked"],
+      default: "active",  // ✅ By default, user is active
+    },
+    previousData: {
+      type: Array,
+      default: [], // each element: { name, phoneNumber, updatedAt }
+    },
   },
   { timestamps: true }
 );
