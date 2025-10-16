@@ -2,7 +2,8 @@ const Usercreate = require("../../../Modles/Website Models/userRegister");
 
 exports.editProfile = async (req, res) => {
   try {
-    const { email, name, phoneNumber } = req.body;
+    const { email, firstname, lastname, phoneNumber } = req.body;
+
     if (!email) return res.status(400).json({ status: 0, message: "Email is required" });
 
     const user = await Usercreate.findOne({ email });
@@ -10,7 +11,8 @@ exports.editProfile = async (req, res) => {
 
     // Save previous data only if there is an update
     const oldData = {};
-    if (name && name !== user.name) oldData.name = user.name;
+    if (firstname && firstname !== user.firstname) oldData.firstname = user.firstname;
+    if (lastname && lastname !== user.lastname) oldData.lastname = user.lastname;
     if (phoneNumber && phoneNumber !== user.phoneNumber) oldData.phoneNumber = user.phoneNumber;
 
     if (Object.keys(oldData).length > 0) {
@@ -19,7 +21,8 @@ exports.editProfile = async (req, res) => {
     }
 
     // Update current data
-    if (name) user.name = name;
+    if (firstname) user.firstname = firstname;
+    if (lastname) user.lastname = lastname;
     if (phoneNumber) user.phoneNumber = phoneNumber;
 
     await user.save();
@@ -29,10 +32,10 @@ exports.editProfile = async (req, res) => {
       message: "Profile updated successfully",
       data: {
         id: user.id,
-        name: user.name,
+        firstname: user.firstname,
+        lastname: user.lastname,
         email: user.email,
         phoneNumber: user.phoneNumber,
-        
       },
     });
   } catch (error) {

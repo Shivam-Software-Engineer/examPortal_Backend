@@ -1,4 +1,3 @@
-// models/ExamSubmission.js  (update)
 const mongoose = require("mongoose");
 
 const questionSchema = new mongoose.Schema({
@@ -6,11 +5,12 @@ const questionSchema = new mongoose.Schema({
   type: { type: String },
   text: { type: String, required: true },
   options: [{ type: String }],
-  correct: { type: Number, required: true },
-  explanation: { type: String },
-  passage: { type: String },
-  videoLink: { type: String },
-  imageLink: { type: String },
+ correct: { type: mongoose.Schema.Types.Mixed, required: true },
+  explanation: { type: String, default: "" },
+  passage: { type: String, default: null },
+  videoLink: { type: String, default: null },
+  imageLink: { type: [String], default: [] },
+
 
   selected: { type: mongoose.Schema.Types.Mixed, default: null },
   status: { type: Boolean, required: true }, // true if correct
@@ -24,16 +24,21 @@ const sectionSchema = new mongoose.Schema({
   questions: [questionSchema]
 });
 
+// examSubmissionSchema
 const examSubmissionSchema = new mongoose.Schema({
   id: { type: Number, required: true, unique: true },
   attempt: { type: Number, required: true },
   email: { type: String, required: true },
   examType: { type: String, required: true },
   testName: { type: String, required: true },
-  sections: [sectionSchema],
-  totalMarks: { type: Number, required: true },
-  totalTime: { type: Number, required: true }, // seconds
+  sections: {
+    type: [sectionSchema],
+    default: [],  // sections ko dynamically push karenge
+  },
+  totalMarks: { type: Number, default: 0 },
+  totalTime: { type: Number, default: 0 }, // seconds
   submittedAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("ExamSubmitted", examSubmissionSchema, "ExamSubmitted");
+
+module.exports = mongoose.model("ExamSubmission", examSubmissionSchema, "ExamSubmitted");

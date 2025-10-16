@@ -47,11 +47,13 @@ const loginController = async (req, res) => {
     // frontend ke liye safe object
     const responseUser = {
       id: user.id,
-      name: user.name,
+      firstname: user.firstname,
+      lastname: user.lastname,
       email: user.email,
       signupMethod: user.signupMethod,
       phoneNumber: user.phoneNumber,
       status: user.status,
+      createdAt: user.createdAt,
     };
 
     return res.status(200).json({ status: 1, message: "Login successful", user: responseUser });

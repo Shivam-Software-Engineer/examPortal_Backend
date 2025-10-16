@@ -5,8 +5,7 @@
         test1: {
         quant: require("../../../Exam Data/Gmat/Test1/quantQuestions").default,
         verbal: require("../../../Exam Data/Gmat/Test1/verbalQuestions").default,
-        // datainsights: require("../../../Exam Data/Gmat/Test1/datainsightsQuestions").default,
-
+         
         },
         test2: {
         quant: require("../../../Exam Data/Gmat/Test2/quantQuestions").default,

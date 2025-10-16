@@ -7,7 +7,7 @@ const test1DataInsightsQuestions = [
     passage:
       "The pie chart and bar graph below were created independently by two individuals. Both graphs represent the same collection of 72,000 books. However, the individuals grouped some of the books differently—some books have been placed in different categories.",
     imageLink: ["https://gmat.maxiwiselearning.com/pie.png", "https://gmat.maxiwiselearning.com/graph.png"],
-    instructions:
+    text:
       "Select from each drop-down menu the option that creates the most accurate statement.",
    
     videoLink: "",
@@ -46,13 +46,13 @@ const test1DataInsightsQuestions = [
     difficulty: "medium",
     passage:
       "A startup has 80 employees, each working in exactly one of the company’s three teams: Engineering, Marketing, or Design. 25% of the employees work in Marketing. 10 more people work in Engineering than in Design.",
-    instructions:
+    text:
       "Select the number of employees in Design and Engineering teams. Make two selections, one per column.",
     tableHeadings: {
       column1: "Engineering",
       column2: "Design"
     },
-    passage: "",
+    
     videoLink: "",
     imageLink: "",
     options: [15, 20, 25, 30, 35],

@@ -2,10 +2,11 @@
     const { otpsend } = require('../../Controllers/Webiste Controllers/Authentication Controller/otpSend');
     const { otpverify } = require('../../Controllers/Webiste Controllers/Authentication Controller/otpVerify');
     const { googleRegister } = require('../../Controllers/Webiste Controllers/Authentication Controller/googleRegiter');
-    const { resetotp } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassOtp');
+
     const { resetpassword } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassword');
     const { loginController } = require('../../Controllers/Webiste Controllers/Authentication Controller/login');
 const { editProfile } = require('../../Controllers/Webiste Controllers/Authentication Controller/editProfile');
+const { resetotp } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassOtp');
 
 
 

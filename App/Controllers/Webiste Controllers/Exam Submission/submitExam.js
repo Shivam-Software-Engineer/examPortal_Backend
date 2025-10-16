@@ -1,103 +1,174 @@
-const examSubmission = require("../../../Modles/Website Models/examSubmission");
-const Usercreate = require("../../../Modles/Website Models/userRegister");
+const ExamSubmission = require("../../../Modles/Website Models/examSubmission");
 
-// Function to get full questions for a given examType/testName/section
+// Helper: get questions from local JSON
 const getQuestionsForSection = (examType, testName, section) => {
   try {
     const exam = examType.toLowerCase();
     const test = testName.toLowerCase();
     const sec = section.toLowerCase();
 
+    let questions = [];
     if (exam === "gmat") {
       if (test === "test1") {
-        if (sec === "quant") return require("../../../Exam Data/Gmat/Test1/quantQuestions").default;
-        if (sec === "verbal") return require("../../../Exam Data/Gmat/Test1/verbalQuestions").default;
+        if (sec === "quant") questions = require("../../../Exam Data/Gmat/Test1/quantQuestions").default || require("../../../Exam Data/Gmat/Test1/quantQuestions");
+        if (sec === "verbal") questions = require("../../../Exam Data/Gmat/Test1/verbalQuestions").default || require("../../../Exam Data/Gmat/Test1/verbalQuestions");
+        
       }
       if (test === "test2") {
-        if (sec === "quant") return require("../../../Exam Data/Gmat/Test2/quantQuestions").default;
-        if (sec === "verbal") return require("../../../Exam Data/Gmat/Test2/verbalQuestions").default;
+        if (sec === "quant") questions = require("../../../Exam Data/Gmat/Test2/quantQuestions").default || require("../../../Exam Data/Gmat/Test2/quantQuestions");
+        if (sec === "verbal") questions = require("../../../Exam Data/Gmat/Test2/verbalQuestions").default || require("../../../Exam Data/Gmat/Test2/verbalQuestions");
       }
     }
-
-    // TODO: Add GRE/SAT similarly
-    return null;
+    return Array.isArray(questions) ? questions : [];
   } catch (err) {
     console.error(err);
-    return null;
+    return [];
   }
 };
 
+// Helper: check multi-prompt correctness
+function buildCorrectMap(fullQ) {
+  if (!fullQ) return null;
+
+  if (fullQ.correct !== undefined && fullQ.correct !== null) {
+    if (Array.isArray(fullQ.correct)) {
+      const map = {};
+      fullQ.correct.forEach((v, i) => (map[i] = v));
+      return map;
+    }
+    if (typeof fullQ.correct === "object") return { ...fullQ.correct };
+    return { 0: fullQ.correct };
+  }
+
+  if (Array.isArray(fullQ.prompts)) {
+    const map = {};
+    fullQ.prompts.forEach((p, i) => (map[i] = p.correct ?? null));
+    return map;
+  }
+
+  return null;
+}
+
+function buildSelectedMap(selected) {
+  if (selected === null || selected === undefined) return {};
+  if (Array.isArray(selected)) {
+    const m = {};
+    selected.forEach((v, i) => (m[i] = v));
+    return m;
+  }
+  if (typeof selected === "object") return { ...selected };
+  return { 0: selected };
+}
+
+function comparePromptAnswer(fullQ, promptIndex, corr, sel) {
+  if (corr == null || sel == null) return false;
+
+  if (typeof corr === typeof sel) return String(corr) === String(sel);
+
+  const opts = fullQ.prompts?.[promptIndex]?.options;
+  if (typeof corr === "number" && typeof sel === "string" && Array.isArray(opts)) {
+    const idx = opts.findIndex(o => String(o) === String(sel));
+    return String(corr) === String(idx);
+  }
+
+  if (typeof corr === "string" && typeof sel === "number" && Array.isArray(opts)) {
+    return String(corr) === String(opts[sel]);
+  }
+
+  return String(corr) === String(sel);
+}
+
+function isDataInsightCorrect(fullQ, selected) {
+  const correctMap = buildCorrectMap(fullQ);
+  if (!correctMap) return false;
+
+  const selectedMap = buildSelectedMap(selected);
+  for (const k of Object.keys(correctMap)) {
+    if (!selectedMap.hasOwnProperty(k)) return false;
+    if (!comparePromptAnswer(fullQ, Number(k), correctMap[k], selectedMap[k])) return false;
+  }
+  return true;
+}
+
+// Submit Exam Controller
 const submitExam = async (req, res) => {
   try {
     const { examType, testName } = req.params;
     const { email, sections } = req.body;
 
-    if (!email || !sections) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
+    if (!email || !sections) return res.status(400).json({ message: "Missing required fields" });
 
-    // 1️⃣ Generate unique submission ID safely
-    const lastSubmission = await examSubmission.findOne().sort({ id: -1 });
-    const lastId = lastSubmission && !isNaN(lastSubmission.id) ? lastSubmission.id : 0;
-    const newId = lastId + 1;
+    // Generate new submission ID
+    const lastSubmission = await ExamSubmission.findOne().sort({ id: -1 });
+    const newId = lastSubmission ? lastSubmission.id + 1 : 1;
 
-    // 2️⃣ Calculate attempt number for this user/exam/test
-    const previousAttempts = await examSubmission.find({ email, examType, testName });
+    // Attempt number
+    const previousAttempts = await ExamSubmission.find({ email, examType, testName });
     const attemptNumber = previousAttempts.length + 1;
 
     let totalMarks = 0;
 
-    // 3️⃣ Map sections and questions
     const sectionsWithData = sections.map(sec => {
       const fullQuestions = getQuestionsForSection(examType, testName, sec.name);
       if (!fullQuestions) return null;
 
-      const questions = fullQuestions.map(fullQ => {
-        const userQ = sec.questions.find(q => q.id === fullQ.id);
+      const questions = fullQuestions.map(fq => {
+        const userQ = sec.questions.find(q => q.questionId === fq.id);
+        const selected = userQ?.selected ?? null;
 
-        // Handle selected answer & status
-        const selected = userQ?.selected ?? null; // null if not answered
-        const status = typeof selected === "number" ? selected === fullQ.correct : false;
-
+        // Determine correctness
+        const multiPromptTypes = ["GraphicsInterpretation", "TwoPartAnalysis", "TableAnalysis", "MultiSourceReasoning"];
+        let status = false;
+        if (multiPromptTypes.includes(fq.type)) {
+          status = isDataInsightCorrect(fq, selected);
+        } else {
+          status = String(selected) === String(fq.correct);
+        }
         if (status) totalMarks += 1;
 
         return {
-          id: fullQ.id,
-          type: fullQ.type,
-          text: fullQ.text,
-          options: fullQ.options,
-          correct: fullQ.correct,
-          explanation: fullQ.explanation,
-          passage: fullQ.passage,
-          videoLink: fullQ.videoLink,
-          imageLink: fullQ.imageLink,
+          id: fq.id,
+          type: fq.type,
+          text: fq.text,
+          options: fq.options || [],
+          correct: fq.correct,
+          explanation: fq.explanation || "",
+          passage: fq.passage || null,
+          videoLink: fq.videoLink || null,
+          imageLink: fq.imageLink || null,
           selected,
-          status
+          status,
+          timeTaken: userQ?.timeTaken ?? 0
         };
       });
 
-      const sectionTotal = questions.filter(q => q.status).length;
-
-      return { name: sec.name, totalMarks: sectionTotal, questions };
+      return {
+        name: sec.name,
+        totalMarks: questions.filter(q => q.status).length,
+        totalTime: questions.reduce((a, q) => a + (q.timeTaken || 0), 0),
+        questions
+      };
     }).filter(Boolean);
 
-    // 4️⃣ Save submission to DB
-    const submission = new examSubmission({
+    const totalTime = sectionsWithData.reduce((sum, s) => sum + s.totalTime, 0);
+
+    const submission = new ExamSubmission({
       id: newId,
       attempt: attemptNumber,
       email,
       examType,
       testName,
       sections: sectionsWithData,
-      totalMarks
+      totalMarks,
+      totalTime
     });
 
     await submission.save();
 
-    // 5️⃣ Response
     res.json({
       message: "Exam submitted successfully",
       totalMarks,
+      totalTime,
       sections: sectionsWithData,
       attempt: attemptNumber
     });

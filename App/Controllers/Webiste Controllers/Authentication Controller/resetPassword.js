@@ -65,7 +65,7 @@ const resetpassword = async (req, res) => {
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 520px; margin: auto; padding: 24px; border-radius: 12px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); border: 1px solid #eee;">
           <h2 style="text-align: center; color: #2F80ED;">Maxiwise Learning</h2>
-          <p style="font-size: 16px; color: #333;">Hi ${user.name || "User"},</p>
+          <p style="font-size: 16px; color: #333;">Hi ${user.firstname + " " + user.lastname},</p>
           <p style="font-size: 16px; color: #333; line-height: 1.6;">
             Your password has been successfully <strong>reset</strong>.  
             You can now login using your new password.

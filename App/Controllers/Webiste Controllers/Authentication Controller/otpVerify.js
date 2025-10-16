@@ -7,7 +7,7 @@ const { otpdata } = require("./otpSend");
 // Verify OTP + Register
 const otpverify = async (req, res) => {
   try {
-    const { name, email, phoneNumber, password, otp } = req.body;
+    const { firstname, lastname, email, phoneNumber, password, otp } = req.body;
 
     if (!email || !phoneNumber || !otp) {
       return res.status(400).json({
@@ -37,7 +37,7 @@ const otpverify = async (req, res) => {
           html: `
             <div style="font-family: Arial, sans-serif; padding:20px; max-width:600px; margin:auto; background:#fff; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
               <h2 style="color:#c0392b; text-align:center;">⚠️ Already Registered</h2>
-              <p style="font-size:16px; color:#333;">Hi <strong>${existingUser.name}</strong>,</p>
+              <p style="font-size:16px; color:#333;">Hi <strong>${existingUser.firstname}</strong>,</p>
               <p style="font-size:15px; color:#555;">
                 Our records show that <strong>${normalizedEmail}</strong> is already registered with Maxiwise Learning.
               </p>
@@ -65,7 +65,8 @@ const newId = lastUser ? lastUser.id + 1 : 1;
     // ✅ New user register
     const newUser = await Usercreate.create({
       id: newId,
-      name,
+      firstname,
+      lastname,
       email: normalizedEmail,
       phoneNumber,
       password, // ⚠️ yaha pe bcrypt hash karna zaroori hai
@@ -83,7 +84,7 @@ const newId = lastUser ? lastUser.id + 1 : 1;
         html: `
           <div style="font-family: Arial, sans-serif; padding:20px; max-width:600px; margin:auto; background:#fff; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
             <h2 style="color:#27ae60; text-align:center;">🎉 Successfully Registered!</h2>
-            <p style="font-size:16px; color:#333;">Hi <strong>${name}</strong>,</p>
+            <p style="font-size:16px; color:#333;">Hi <strong>${firstname}</strong>,</p>
             <p style="font-size:15px; color:#555;">
               Congratulations! Your email <strong>${normalizedEmail}</strong> has been successfully registered with Maxiwise Learning.
             </p>

@@ -3,11 +3,11 @@ const test1QuantQuestions = [
     id: 1,
     type: 'Algebra',
     difficulty: "easy",
-    text: "Positive integers $a > b$ satisfy $a^2 - b^2 = 77$ and $a + b < 20$. How many ordered pairs $(a, b)$ are possible?",
+    text:"Positive integers a > b satisfy a<sup>2</sup> - b<sup>2</sup> = 77 and a + b < 20. How many ordered pairs (a, b) are possible?",
     options: ["0", "1", "2", "3", "4"],
     correct: 1,
     explanation:
-      "Rewrite as $(a − b)(a + b) = 77$. Factor pairs of 77: $(1, 77)$ and $(7, 11)$. Only $(7, 11)$ satisfies $a + b < 20$: $$a - b = 7, \\quad a + b = 11 \\Rightarrow a = 9, \\quad b = 2.$$",
+      "Rewrite as (a − b)(a + b) = 77. Factor pairs of 77: (1, 77) and (7, 11). Only (7, 11) satisfies a + b < 20: a - b = 7, a + b = 11 ⇒ a = 9, b = 2.",
     passage: "",
     videoLink: "",
     imageLink: ""
