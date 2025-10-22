@@ -165,7 +165,7 @@ const test1DataInsightsQuestions = [
     text:
       "Liam is choosing a treadmill and has shortlisted seven models. Requirements:",
     instructions:
-      "1. Minimum speed ≥ 5 km/h  2. Maximum speed ≤ 15 km/h. Select Yes/No for each statement.",
+      "1.The Minimum speed should be at least 5 km/h  <br>2.The Maximum speed should be no more than 15 km/h. <br><br><b>Select Yes/No for each statement.</b>",
       passage: "",
     videoLink: "",
     imageLink: "",
@@ -207,7 +207,7 @@ const test1DataInsightsQuestions = [
     prompts: [
       {
         type: "table",
-        statement: "Select 'Explicitly mentioned in Proposal 1' if principle is in Proposal 1.",
+        statement: "1. For each of the following principles named in the Customer Parcel Tags tab, select 'Explicitly mentioned in Proposal 1' if that principle is explicitly mentioned in the description of Proposal 1. Otherwise, select 'Not explicitly mentioned in Proposal 1.",
         rows: [
           { statement: "Database Constraints", options: ["Yes","No"], correct:0, correctAnswer:"Yes" },
           { statement: "Error Checking", options: ["Yes","No"], correct:0, correctAnswer:"Yes" },
@@ -230,7 +230,7 @@ const test1DataInsightsQuestions = [
     id: 6,
     type: "MultiSourceReasoning",
     difficulty: "hard",
-    text: "Suppose Proposal 2 is adopted. Determine tag validity.",
+    text: "",
     tabs: {
      "Proposal 1": "<p>To comply with new regulations around protecting personal information, a parcel delivery company must redesign the way it assigns identification tags to customer records in its system.</p><p>The company is considering new proposals that must meet all of the following conditions:</p><ul><li><strong>Database Constraints:</strong> Each character in the tag must be from the following <strong>symbols and numbers only</strong> (no letters allowed):<br><code>! @ # $ % ^ & * ( ) - _ + = &lt; &gt; ? / 0 1 2 3 4 5 6 7 8 9</code></li><li><strong>Error Checking:</strong> There must be a simple method to determine whether a tag could be valid, even without querying the system.</li><li><strong>Meaningful:</strong> Each tag must encode some actual information about the customer or the parcel delivery (such as time, region, or parcel type).</li></ul><p>All previously stored customer records will also be updated using whichever tagging system is selected.</p>",
       "Proposal 2": "<p>Each tag has 3 parts:</p><ol><li><strong>Order Time</strong><br>Use 2-digit hour (00–23) followed by 2-digit minutes (00–59), using only numerals.<br><strong>&rarr; Example:</strong> 1342 for 1:42 PM</li><li><strong>Parcel Type Code</strong><br>Choose from the approved symbol pairs:<br><ul><li>Fragile &rarr; <code>@%</code></li><li>Oversized &rarr; <code>^&amp;</code></li><li>Standard &rarr; <code>$*</code></li><li>Express &rarr; <code>&gt;&lt;</code></li></ul></li><li><strong>Validity Marker</strong><br>Add the numeric digits in the tag. If the sum is divisible by 3, append <code>=</code>, else append <code>?</code>.<br><strong>&rarr; Example:</strong> For <code>1342$*</code>, digit sum = 1+3+4+2 = 10 → not divisible by 3 → tag ends with <code>?</code><br><strong>&#9989; Final Tag:</strong> <code>1342$*?</code></li></ol>",
@@ -242,7 +242,7 @@ const test1DataInsightsQuestions = [
     prompts: [
       {
         type: "table",
-        statement: "Select 'Could be true' or 'Could not be true' for tags.",
+        statement: "2. Suppose that Proposal 2 has been adopted. For each of the following statements about this parcel, select 'Could be true' if, in light of the given information, the statement could be true. Otherwise, select 'Could not be true'.",
         rows: [
           { statement: "Tag @!30+ → North region, 30th, morning.", options:["Yes","No"], correct:1, correctAnswer:"No" },
           { statement: "Tag &*02/ → West region, 2nd, evening.", options:["Yes","No"], correct:0, correctAnswer:"Yes" },
@@ -265,7 +265,7 @@ const test1DataInsightsQuestions = [
     id: 7,
     type: "MultiSourceReasoning",
     difficulty: "hard",
-    text: "How many different 5-character tags are possible under Proposal 3?",
+    text: "",
     tabs: {
      "Proposal 1": "<p>To comply with new regulations around protecting personal information, a parcel delivery company must redesign the way it assigns identification tags to customer records in its system.</p><p>The company is considering new proposals that must meet all of the following conditions:</p><ul><li><strong>Database Constraints:</strong> Each character in the tag must be from the following <strong>symbols and numbers only</strong> (no letters allowed):<br><code>! @ # $ % ^ & * ( ) - _ + = &lt; &gt; ? / 0 1 2 3 4 5 6 7 8 9</code></li><li><strong>Error Checking:</strong> There must be a simple method to determine whether a tag could be valid, even without querying the system.</li><li><strong>Meaningful:</strong> Each tag must encode some actual information about the customer or the parcel delivery (such as time, region, or parcel type).</li></ul><p>All previously stored customer records will also be updated using whichever tagging system is selected.</p>",
       "Proposal 2": "<p>Each tag has 3 parts:</p><ol><li><strong>Order Time</strong><br>Use 2-digit hour (00–23) followed by 2-digit minutes (00–59), using only numerals.<br><strong>&rarr; Example:</strong> 1342 for 1:42 PM</li><li><strong>Parcel Type Code</strong><br>Choose from the approved symbol pairs:<br><ul><li>Fragile &rarr; <code>@%</code></li><li>Oversized &rarr; <code>^&amp;</code></li><li>Standard &rarr; <code>$*</code></li><li>Express &rarr; <code>&gt;&lt;</code></li></ul></li><li><strong>Validity Marker</strong><br>Add the numeric digits in the tag. If the sum is divisible by 3, append <code>=</code>, else append <code>?</code>.<br><strong>&rarr; Example:</strong> For <code>1342$*</code>, digit sum = 1+3+4+2 = 10 → not divisible by 3 → tag ends with <code>?</code><br><strong>&#9989; Final Tag:</strong> <code>1342$*?</code></li></ol>",
@@ -274,7 +274,7 @@ const test1DataInsightsQuestions = [
     passage: "",
     videoLink: "",
     imageLink: "",   
-    instructions: "Choose the correct number of tag combinations.",
+    instructions: "3. How many different 5-character tags are possible under Proposal 3?",
     options: ["124","248","496","512","620"],
     correct: 2,
     explanation: "4 regions × 31 days × 4 time markers = 496 possible tags."

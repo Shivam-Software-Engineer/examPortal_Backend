@@ -44,19 +44,20 @@ const test1QuantQuestions = [
     videoLink: "",
     imageLink: ""
   },
-  {
-    id: 4,
-    type: 'Algebra',
-     difficulty: "hard",
-    text: "Nine distinct integers are ordered $a_1 < a_2 < \\dots < a_9$.<br/>Given:<br/>• median $a_5 = 10$<br/>• mean of all nine numbers = 10<br/>• minimum $a_1 = 4$<br/>• maximum $a_9 = 20$<br/>What is the largest possible value of the second‑largest number $a_8$?",
-    options: ["13", "14", "15", "16", "18"],
-    correct: 2,
-    explanation:
-      "Total sum = $$9 \\times 10 = 90$$<br/>Minimise other variables: $$a_2, a_3, a_4 = 5, 6, 7$$; $$a_6, a_7 = 11, 12$$<br/>Sum known = $$4 + 5 + 6 + 7 + 10 + 11 + 12 + 20 = 75$$<br/>$$a_8 = 90 - 75 = 15$$<br/>Answer **C**",
-    passage: "",
-    videoLink: "",
-    imageLink: ""
-  },
+ {
+  id: 4,
+  type: "Algebra",
+  difficulty: "hard",
+  text: "Nine distinct integers are ordered a<sub>1</sub> &lt; a<sub>2</sub> &lt; &hellip; &lt; a<sub>9</sub>.<br/>Given:<br/>• median a<sub>5</sub> = 10<br/>• mean of all nine numbers = 10<br/>• minimum a<sub>1</sub> = 4<br/>• maximum a<sub>9</sub> = 20<br/>What is the largest possible value of the second-largest number a<sub>8</sub>?",
+  options: ["13", "14", "15", "16", "18"],
+  correct: 2,
+  explanation:
+    "Total sum = 9 × 10 = 90<br/>Minimise other variables: a<sub>2</sub>, a<sub>3</sub>, a<sub>4</sub> = 5, 6, 7; a<sub>6</sub>, a<sub>7</sub> = 11, 12<br/>Sum known = 4 + 5 + 6 + 7 + 10 + 11 + 12 + 20 = 75<br/>a<sub>8</sub> = 90 − 75 = 15<br/><strong>Answer: C</strong>",
+  passage: "",
+  videoLink: "",
+  imageLink: ""
+}
+,
   {
     id: 5,
     type: 'Arithmatic',
