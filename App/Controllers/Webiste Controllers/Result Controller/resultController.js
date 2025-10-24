@@ -66,7 +66,7 @@ const getResultDetail = async (req, res) => {
     if (dataInsightsResult) {
       // Prepare a Data Insights section object
       const dataSection = {
-        sectionName: "Data Insights",
+        sectionName: "datainsights",
         totalMarks: dataInsightsResult.totalMarks,
         totalTime: dataInsightsResult.totalTime,
         questions: dataInsightsResult.questions,
