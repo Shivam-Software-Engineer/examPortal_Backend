@@ -1,12 +1,11 @@
 const { default: test1DataInsightsQuestions } = require("../../../Exam Data/Gmat/Test1/datainsightsQuestions");
 const dataInsights = require("../../../Modles/Website Models/dataInsights");
 const DataInsightsSession = require("../../../Modles/Website Models/dataInsightsSession");
+const isEqual = require("lodash.isequal");
 
 // Question Bank
 const dataInsightsBank = {
-  gmat: {
-    test1: test1DataInsightsQuestions,
-  },
+  gmat: { test1: test1DataInsightsQuestions },
   gre: { test1: [] },
   sat: { test1: [] }
 };
@@ -53,22 +52,6 @@ const getDataInsightsQuestions = async (req, res) => {
   }
 };
 
-// ==================== Helper: Compare Selected vs Correct ====================
-const isEqual = (userSelected, correct) => {
-  const convert = (v) => {
-    if (Array.isArray(v)) return v.map(Number);
-    if (typeof v === "object" && v !== null) return Object.values(v).map(Number);
-    return [Number(v)];
-  };
-
-  const a = convert(userSelected);
-  const b = convert(correct);
-
-  if (a.length !== b.length) return false;
-  return a.every((val, idx) => val === b[idx]);
-};
-
-// ==================== POST Submit Data Insights Answers ====================
 // ==================== POST Submit Data Insights Answers ====================
 const submitDataInsightsAnswers = async (req, res) => {
   try {
@@ -82,26 +65,16 @@ const submitDataInsightsAnswers = async (req, res) => {
       return res.status(400).json({ status: 0, message: "Answers must be an array" });
     }
 
-    // ✅ Step 1: Check previous attempts
-    const previousSubmissions = await dataInsights.find({
-      email,
-      examType,
-      testName
-    }).sort({ attempt: -1 });  // latest attempt first
-
+    // ✅ Check previous attempts
+    const previousSubmissions = await dataInsights.find({ email, examType, testName }).sort({ attempt: -1 });
     if (previousSubmissions.length >= 2) {
       return res.status(400).json({
         status: 0,
-        message: `You have already attempted this test ${previousSubmissions.length} times. Maximum 2 attempts allowed.`
+        message: `You have already attempted this test ${previousSubmissions.length} times. Maximum 2 attempts allowed.`,
       });
     }
 
-    // ✅ Step 2: Determine attempt number
-    const nextAttempt = previousSubmissions.length > 0
-      ? previousSubmissions[0].attempt + 1
-      : 1;
-
-    // Fetch question bank
+    const nextAttempt = previousSubmissions.length > 0 ? previousSubmissions[0].attempt + 1 : 1;
     const questionBank = dataInsightsBank[examType?.toLowerCase()]?.[testName?.toLowerCase()] || [];
     if (questionBank.length === 0) {
       return res.status(404).json({ status: 0, message: "No question bank found for this exam/test" });
@@ -109,38 +82,53 @@ const submitDataInsightsAnswers = async (req, res) => {
 
     let totalMarks = 0;
 
-    const mergedQuestions = questionBank.map(q => {
-      const userAnswer = answers.find(a => a.questionId === q.id);
+    const mergedQuestions = questionBank.map((q) => {
+      const userAnswer = answers.find((a) => a.questionId === q.id);
       let status = false;
       let promptsStatus = [];
 
       if (q.prompts && Array.isArray(q.prompts)) {
-        promptsStatus = q.prompts.map((prompt, idx) => {
-          const userSelected = userAnswer?.selected?.[idx];
-          return typeof prompt.correct !== "undefined" ? isEqual(userSelected, prompt.correct) : false;
+        promptsStatus = q.prompts.map((_, idx) => {
+          const correctVal = q.correct?.[idx];
+          const userVal = userAnswer?.selected?.[idx];
+          return isEqual(correctVal, userVal);
         });
-
-        status = promptsStatus.every(s => s === true);
+        status = promptsStatus.every(Boolean);
         if (status) totalMarks += 1;
+
+      } else if (typeof q.correct === "object" && !Array.isArray(q.correct)) {
+        const correctArr = Object.values(q.correct);
+        const userSel = userAnswer?.selected || [];
+        status = isEqual(correctArr, userSel);
+        if (status) totalMarks += 1;
+
       } else {
-        if (typeof q.correct !== "undefined") {
-          const userSelected = userAnswer?.selected;
-          status = isEqual(userSelected, q.correct);
-          if (status) totalMarks += 1;
-        }
-      }
+  let userSel = userAnswer?.selected;
+  let correctVal = q.correct;
+
+  // Normalize both
+  if (Array.isArray(userSel) && userSel.length === 1) userSel = userSel[0];
+  if (Array.isArray(correctVal) && correctVal.length === 1) correctVal = correctVal[0];
+
+  // If one is array and one is scalar, flatten both to array of numbers
+  if (!Array.isArray(userSel) && Array.isArray(correctVal)) userSel = [userSel];
+  if (!Array.isArray(correctVal) && Array.isArray(userSel)) correctVal = [correctVal];
+
+  status = isEqual(correctVal, userSel);
+  if (status) totalMarks += 1;
+}
+
 
       return {
         ...q,
         selected: userAnswer?.selected || null,
         status,
-        promptsStatus: promptsStatus.length > 0 ? promptsStatus : undefined
+        promptsStatus: promptsStatus.length ? promptsStatus : undefined,
       };
     });
 
-    totalMarks = Math.round(totalMarks * 100) / 100;
+    totalMarks = Math.round(totalMarks);
 
-    // Calculate total time from session
     const session = await DataInsightsSession.findOne({ email, examType, testName });
     let totalTimeTaken = 0;
     if (session && session.startTime) {
@@ -148,16 +136,16 @@ const submitDataInsightsAnswers = async (req, res) => {
       await DataInsightsSession.deleteOne({ _id: session._id });
     }
 
-    // ✅ Step 3: Save submission with attempt number
     const submission = new dataInsights({
       email,
       examType,
       testName,
       totalMarks,
       totalTime: totalTimeTaken,
-      attempt: nextAttempt,   // 👈 Store attempt
-      questions: mergedQuestions
+      attempt: nextAttempt,
+      questions: mergedQuestions,
     });
+
     await submission.save();
 
     return res.status(200).json({
@@ -165,17 +153,15 @@ const submitDataInsightsAnswers = async (req, res) => {
       message: `Submission stored successfully (Attempt ${nextAttempt})`,
       totalMarks,
       totalTime: totalTimeTaken,
-      attempt: nextAttempt
+      attempt: nextAttempt,
     });
-
   } catch (err) {
     console.error(err);
     return res.status(500).json({ status: 0, message: "Server error", error: err.message });
   }
 };
 
-
 module.exports = {
   getDataInsightsQuestions,
-  submitDataInsightsAnswers
+  submitDataInsightsAnswers,
 };
