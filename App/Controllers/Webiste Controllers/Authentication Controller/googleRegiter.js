@@ -1,18 +1,19 @@
+
+const { transporter } = require("../../../Configuration/mailConfig");
 const Usercreate = require("../../../Modles/Website Models/userRegister");
 
 const googleRegister = async (req, res) => {
   try {
-    // Accept either: { name, email, googleId, picture } OR { firstname, lastname, email, googleId, picture }
     let { name, firstname, lastname, email, googleId, picture } = req.body;
 
-    // Build firstname/lastname from name if provided
+    // 🧩 Handle name split
     if (!firstname && name) {
       const parts = String(name).trim().split(" ");
       firstname = parts[0] || "";
       lastname = parts.slice(1).join(" ") || "";
     }
 
-    // Validate
+    // ✅ Validate required fields
     if (!firstname || !email) {
       return res.status(400).json({
         success: false,
@@ -22,15 +23,15 @@ const googleRegister = async (req, res) => {
 
     const normalizedEmail = String(email).toLowerCase().trim();
 
-    // Find existing user by email
+    // 🔍 Check if user already exists
     let user = await Usercreate.findOne({ email: normalizedEmail });
 
-    // Generate incremental id (not perfect for concurrency but ok for small apps)
+    // 🔢 Generate incremental ID
     const lastUser = await Usercreate.findOne().sort({ id: -1 }).select("id").lean();
     const newId = lastUser && lastUser.id ? lastUser.id + 1 : 1;
 
+    // 🆕 Create new user if not found
     if (!user) {
-      // Create new Google user (map to schema fields)
       const newUserData = {
         id: newId,
         firstname,
@@ -45,7 +46,33 @@ const googleRegister = async (req, res) => {
 
       user = await Usercreate.create(newUserData);
 
-      // Return created user (safe shape)
+      // ✅ Send success registration mail
+      try {
+        await transporter.sendMail({
+          from: '"Maxiwise Learning" <info@maxiwiselearning.online>',
+          to: normalizedEmail,
+          subject: "Successfully Registered",
+          html: `
+            <div style="font-family: Arial, sans-serif; padding:20px; max-width:600px; margin:auto; background:#fff; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+              <h2 style="color:#27ae60; text-align:center;">🎉 Successfully Registered!</h2>
+              <p style="font-size:16px; color:#333;">Hi <strong>${firstname}</strong>,</p>
+              <p style="font-size:15px; color:#555;">
+                Congratulations! Your email <strong>${normalizedEmail}</strong> has been successfully registered with Maxiwise Learning via <strong>Google Login</strong>.
+              </p>
+              <p style="font-size:15px; color:#555;">
+                You can now access your account and continue your learning journey 🚀.
+              </p>
+              <p style="font-size:13px; color:#999; text-align:center; margin-top:20px;">
+                © ${new Date().getFullYear()} Maxiwise Learning. All rights reserved.
+              </p>
+            </div>
+          `,
+        });
+      } catch (mailErr) {
+        console.error("Error sending Google registration mail:", mailErr);
+      }
+
+      // ✅ Return created user info
       const responseUser = {
         id: user.id,
         firstname: user.firstname,
@@ -61,12 +88,12 @@ const googleRegister = async (req, res) => {
 
       return res.status(201).json({
         success: true,
-        message: "User created via Google login",
+        message: "User created via Google login & mail sent",
         user: responseUser,
       });
     }
 
-    // If user exists and is Google signup → return user
+    // 🔁 If user already exists & signed up via Google → just login
     if (user.signupMethod === "google") {
       const responseUser = {
         id: user.id,
@@ -88,11 +115,12 @@ const googleRegister = async (req, res) => {
       });
     }
 
-    // If user exists but registered manually → notify frontend
+    // ⚠️ If already registered via Email/OTP
     return res.status(200).json({
       success: false,
       alreadyRegistered: true,
-      message: "This email is already registered via Email/OTP. Please login normally.",
+      message:
+        "This email is already registered via Email/OTP. Please login normally.",
       user: {
         id: user.id,
         firstname: user.firstname,
