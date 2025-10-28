@@ -1,45 +1,65 @@
 const dataInsights = require("../../../Modles/Website Models/dataInsights");
 const examSubmission = require("../../../Modles/Website Models/examSubmission");
+const Usercreate = require("../../../Modles/Website Models/userRegister");
 
-// Summary controller
+/* ----------------------------- SUMMARY CONTROLLER ----------------------------- */
 const getResultSummary = async (req, res) => {
   try {
     const { email } = req.params;
 
-    // All submissions of this user
+    // Step 1: Check if user exists
+    const userExists = await Usercreate.findOne({ email });
+    if (!userExists) {
+      return res.status(404).json({ message: "Email not registered" });
+    }
+
+    // Step 2: Fetch all submissions for this user
     const submissions = await examSubmission.find({ email });
 
-    // Group by examType + testName
+    if (!submissions.length) {
+      return res.status(404).json({ message: "No results found for this user" });
+    }
+
+    // Step 3: Group by examType + testName
     const summary = {};
-    submissions.forEach(sub => {
+    submissions.forEach((sub) => {
       const key = `${sub.examType}_${sub.testName}`;
       if (!summary[key]) {
         summary[key] = {
           examType: sub.examType,
           testName: sub.testName,
-          attempts: []
+          attempts: [],
         };
       }
       summary[key].attempts.push({
         attempt: sub.attempt,
         status: sub.submittedAt ? "completed" : "pending",
-        submittedAt: sub.submittedAt || null
+        submittedAt: sub.submittedAt || null,
       });
     });
 
     res.json(Object.values(summary));
   } catch (err) {
+    console.error("Error in getResultSummary:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// Detail controller
+/* ----------------------------- DETAIL CONTROLLER ----------------------------- */
 const getResultDetail = async (req, res) => {
   try {
     const { examType, testName, attempt } = req.params;
     const { email } = req.query;
 
-    // Step 1: Fetch verbal + quant submission
+    console.log("🔍 Params Received:", { examType, testName, attempt, email });
+
+    // ✅ Step 1: Validate email exists
+    const userExists = await Usercreate.findOne({ email });
+    if (!userExists) {
+      return res.status(404).json({ message: "Email not registered" });
+    }
+
+    // ✅ Step 2: Fetch verbal + quant submission
     const baseResult = await examSubmission.findOne({
       email,
       examType,
@@ -51,10 +71,9 @@ const getResultDetail = async (req, res) => {
       return res.status(404).json({ message: "Result not found" });
     }
 
-    // Convert to plain JS object so we can modify it freely
     const resultObj = baseResult.toObject();
 
-    // Step 2: Fetch Data Insights submission for the same attempt
+    // ✅ Step 3: Fetch Data Insights submission for same attempt
     const dataInsightsResult = await dataInsights.findOne({
       email,
       examType,
@@ -62,9 +81,8 @@ const getResultDetail = async (req, res) => {
       attempt: parseInt(attempt),
     });
 
-    // Step 3: If Data Insights result exists → merge
+    // ✅ Step 4: Merge Data Insights if exists
     if (dataInsightsResult) {
-      // Prepare a Data Insights section object
       const dataSection = {
         sectionName: "datainsights",
         totalMarks: dataInsightsResult.totalMarks,
@@ -72,27 +90,21 @@ const getResultDetail = async (req, res) => {
         questions: dataInsightsResult.questions,
       };
 
-      // If sections doesn't exist, initialize it
       if (!Array.isArray(resultObj.sections)) {
         resultObj.sections = [];
       }
 
-      // Push Data Insights section into the sections array
       resultObj.sections.push(dataSection);
-
-      // Add Data Insights total to the overall totals
       resultObj.totalMarks += dataInsightsResult.totalMarks;
       resultObj.totalTime += dataInsightsResult.totalTime;
     }
 
-    // Step 4: Return the combined result
+    // ✅ Step 5: Return merged result
     res.json(resultObj);
-
   } catch (err) {
     console.error("Error in getResultDetail:", err);
     res.status(500).json({ error: err.message });
   }
 };
-
 
 module.exports = { getResultSummary, getResultDetail };

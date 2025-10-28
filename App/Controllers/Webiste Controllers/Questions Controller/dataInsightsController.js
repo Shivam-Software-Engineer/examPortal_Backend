@@ -58,15 +58,22 @@ const submitDataInsightsAnswers = async (req, res) => {
     const { email, examType, testName, answers } = req.body;
 
     if (!email || !examType || !testName || !answers) {
-      return res.status(400).json({ status: 0, message: "Provide email, examType, testName and answers" });
+      return res
+        .status(400)
+        .json({ status: 0, message: "Provide email, examType, testName and answers" });
     }
 
     if (!Array.isArray(answers)) {
-      return res.status(400).json({ status: 0, message: "Answers must be an array" });
+      return res
+        .status(400)
+        .json({ status: 0, message: "Answers must be an array" });
     }
 
     // ✅ Check previous attempts
-    const previousSubmissions = await dataInsights.find({ email, examType, testName }).sort({ attempt: -1 });
+    const previousSubmissions = await dataInsights
+      .find({ email, examType, testName })
+      .sort({ attempt: -1 });
+
     if (previousSubmissions.length >= 2) {
       return res.status(400).json({
         status: 0,
@@ -74,68 +81,108 @@ const submitDataInsightsAnswers = async (req, res) => {
       });
     }
 
-    const nextAttempt = previousSubmissions.length > 0 ? previousSubmissions[0].attempt + 1 : 1;
-    const questionBank = dataInsightsBank[examType?.toLowerCase()]?.[testName?.toLowerCase()] || [];
+    const nextAttempt =
+      previousSubmissions.length > 0
+        ? previousSubmissions[0].attempt + 1
+        : 1;
+
+    const questionBank =
+      dataInsightsBank[examType?.toLowerCase()]?.[testName?.toLowerCase()] || [];
+
     if (questionBank.length === 0) {
-      return res.status(404).json({ status: 0, message: "No question bank found for this exam/test" });
+      return res
+        .status(404)
+        .json({ status: 0, message: "No question bank found for this exam/test" });
     }
 
     let totalMarks = 0;
 
     const mergedQuestions = questionBank.map((q) => {
       const userAnswer = answers.find((a) => a.questionId === q.id);
-      let status = false;
+      let status = null;
       let promptsStatus = [];
 
+      // 🟦 Case 1: PROMPTS-based (like TableAnalysis, TwoPart, etc.)
       if (q.prompts && Array.isArray(q.prompts)) {
         promptsStatus = q.prompts.map((_, idx) => {
-          const correctVal = q.correct?.[idx];
           const userVal = userAnswer?.selected?.[idx];
+          const correctVal = q.correct?.[idx];
+
+          if (userVal === null || userVal === undefined) return null; // unattempted
           return isEqual(correctVal, userVal);
         });
-        status = promptsStatus.every(Boolean);
-        if (status) totalMarks += 1;
 
-      } else if (typeof q.correct === "object" && !Array.isArray(q.correct)) {
-        const correctArr = Object.values(q.correct);
-        const userSel = userAnswer?.selected || [];
-        status = isEqual(correctArr, userSel);
-        if (status) totalMarks += 1;
+        if (promptsStatus.every((p) => p === null)) {
+          status = null;
+        } else {
+          status = promptsStatus.every(Boolean);
+          if (status) totalMarks += 1;
+        }
+      }
 
-      } else {
-  let userSel = userAnswer?.selected;
-  let correctVal = q.correct;
+      // 🟩 Case 2: OBJECT-based (MultiSourceReasoning, etc.)
+      else if (typeof q.correct === "object" && !Array.isArray(q.correct)) {
+        const userSel = userAnswer?.selected;
 
-  // Normalize both
-  if (Array.isArray(userSel) && userSel.length === 1) userSel = userSel[0];
-  if (Array.isArray(correctVal) && correctVal.length === 1) correctVal = correctVal[0];
+        if (userSel === null || userSel === undefined) {
+          status = null;
+        } else {
+          const correctArr = Object.values(q.correct);
+          status = isEqual(correctArr, userSel);
+          if (status) totalMarks += 1;
+        }
+      }
 
-  // If one is array and one is scalar, flatten both to array of numbers
-  if (!Array.isArray(userSel) && Array.isArray(correctVal)) userSel = [userSel];
-  if (!Array.isArray(correctVal) && Array.isArray(userSel)) correctVal = [correctVal];
+      // 🟨 Case 3: NORMAL SINGLE / MULTI answer
+      else {
+        let userSel = userAnswer?.selected;
+        let correctVal = q.correct;
 
-  status = isEqual(correctVal, userSel);
-  if (status) totalMarks += 1;
-}
+        if (userSel === null || userSel === undefined) {
+          status = null;
+        } else {
+          // Normalize both sides for comparison
+          if (Array.isArray(userSel) && userSel.length === 1)
+            userSel = userSel[0];
+          if (Array.isArray(correctVal) && correctVal.length === 1)
+            correctVal = correctVal[0];
 
+          if (!Array.isArray(userSel) && Array.isArray(correctVal))
+            userSel = [userSel];
+          if (!Array.isArray(correctVal) && Array.isArray(userSel))
+            correctVal = [correctVal];
+
+          status = isEqual(correctVal, userSel);
+          if (status) totalMarks += 1;
+        }
+      }
 
       return {
         ...q,
-        selected: userAnswer?.selected || null,
-        status,
+        selected: userAnswer?.selected ?? null,
+        status, // true / false / null
         promptsStatus: promptsStatus.length ? promptsStatus : undefined,
       };
     });
 
     totalMarks = Math.round(totalMarks);
 
-    const session = await DataInsightsSession.findOne({ email, examType, testName });
+    // 🕒 Time calculation
+    const session = await DataInsightsSession.findOne({
+      email,
+      examType,
+      testName,
+    });
+
     let totalTimeTaken = 0;
     if (session && session.startTime) {
-      totalTimeTaken = Math.floor((Date.now() - new Date(session.startTime).getTime()) / 1000);
+      totalTimeTaken = Math.floor(
+        (Date.now() - new Date(session.startTime).getTime()) / 1000
+      );
       await DataInsightsSession.deleteOne({ _id: session._id });
     }
 
+    // 💾 Store submission
     const submission = new dataInsights({
       email,
       examType,
@@ -157,7 +204,9 @@ const submitDataInsightsAnswers = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ status: 0, message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ status: 0, message: "Server error", error: err.message });
   }
 };
 

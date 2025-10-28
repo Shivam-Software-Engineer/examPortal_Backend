@@ -26,7 +26,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://gmat.maxiwiselearning.com',
    'http://192.168.89.125:8000', 
-    'http://192.168.89.125:5173',
+     'http://192.168.0.106:5173', 
 ];
 
 // CORS configuration

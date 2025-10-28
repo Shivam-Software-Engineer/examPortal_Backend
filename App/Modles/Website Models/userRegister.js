@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-     id: { type: Number, unique: true },
+    id: { type: Number, unique: true, index: true }, // numeric incremental id (set in controller)
     firstname: {
       type: String,
       required: true,
@@ -11,17 +11,18 @@ const userSchema = new mongoose.Schema(
     lastname: {
       type: String,
       trim: true,
+      default: "",
     },
     email: {
       type: String,
       required: true,
-      unique: true, // ✅ Ensure email uniqueness
+      unique: true,
       lowercase: true,
       trim: true,
     },
     phoneNumber: {
       type: String,
-    default: null,
+      default: null,
       trim: true,
     },
     password: {
@@ -32,21 +33,28 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["manual", "google"],
       required: true,
-      default: "manual", // ✅ Manual signup ke liye default
+      default: "manual",
     },
     status: {
       type: String,
       enum: ["active", "blocked"],
-      default: "active",  // ✅ By default, user is active
+      default: "active",
+    },
+    googleId: {
+      type: String,
+      default: null,
+    },
+    picture: {
+      type: String,
+      default: null,
     },
     previousData: {
       type: Array,
-      default: [], // each element: { name, phoneNumber, updatedAt }
+      default: [],
     },
   },
   { timestamps: true }
 );
-
 
 const Usercreate = mongoose.model("Usercreate", userSchema, "UserData");
 

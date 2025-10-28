@@ -274,7 +274,7 @@ const test1DataInsightsQuestions = [
     passage: "",
     videoLink: "",
     imageLink: "",   
-    instructions: "3. How many different 5-character tags are possible under Proposal 3?",
+    instructions: "How many different 5-character tags are possible under Proposal 3?",
     options: ["124","248","496","512","620"],
     correct: 2,
     explanation: "4 regions × 31 days × 4 time markers = 496 possible tags."

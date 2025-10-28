@@ -1,5 +1,3 @@
-// Controllers/authController.js
-
 const Usercreate = require("../../../Modles/Website Models/userRegister");
 
 const loginController = async (req, res) => {
@@ -7,8 +5,14 @@ const loginController = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (!email) {
+      return res.status(400).json({ status: 0, message: "Email required" });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+
     // 1️⃣ Email check
-    const user = await Usercreate.findOne({ email });
+    const user = await Usercreate.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ status: 0, message: "User not found" });
     }
@@ -18,33 +22,33 @@ const loginController = async (req, res) => {
       return res.status(403).json({ status: 0, message: "User is blocked. Contact admin." });
     }
 
-    // 2️⃣ Manual login
+    // 3️⃣ Manual login
     if (loginMethod === "manual") {
-      // signup method check
       if (user.signupMethod !== "manual") {
         return res.status(401).json({ status: 0, message: "User registered with Google. Cannot login manually." });
       }
 
-      // password check
       if (!password) {
         return res.status(400).json({ status: 0, message: "Password required" });
       }
 
-      if (user.password !== password) { // hash ho toh bcrypt.compare
+      // !!! Replace with bcrypt.compare if you store hashed passwords
+      if (user.password !== password) {
         return res.status(401).json({ status: 0, message: "Invalid password" });
       }
     } 
-    // 3️⃣ Google login
+    // 4️⃣ Google login
     else if (loginMethod === "google") {
       if (user.signupMethod !== "google") {
         return res.status(401).json({ status: 0, message: "User registered manually. Cannot login with Google." });
       }
+      // no password check for google
     } 
     else {
       return res.status(400).json({ status: 0, message: "Invalid login method" });
     }
 
-    // frontend ke liye safe object
+    // frontend safe object
     const responseUser = {
       id: user.id,
       firstname: user.firstname,
@@ -54,6 +58,7 @@ const loginController = async (req, res) => {
       phoneNumber: user.phoneNumber,
       status: user.status,
       createdAt: user.createdAt,
+      picture: user.picture || null,
     };
 
     return res.status(200).json({ status: 1, message: "Login successful", user: responseUser });
