@@ -51,7 +51,7 @@ const getResultDetail = async (req, res) => {
     const { examType, testName, attempt } = req.params;
     const { email } = req.query;
 
-    console.log("🔍 Params Received:", { examType, testName, attempt, email });
+    // console.log("🔍 Params Received:", { examType, testName, attempt, email });
 
     // ✅ Step 1: Validate email exists
     const userExists = await Usercreate.findOne({ email });
