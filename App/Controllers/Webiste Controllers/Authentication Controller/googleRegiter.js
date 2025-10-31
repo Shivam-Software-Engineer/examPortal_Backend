@@ -80,6 +80,7 @@ const googleRegister = async (req, res) => {
         googleId: newUser.googleId,
         picture: newUser.picture,
         createdAt: newUser.createdAt,
+        status: newUser.status,
       },
     });
 
