@@ -83,13 +83,13 @@ const newId = lastUser ? lastUser.id + 1 : 1;
         subject: "Successfully Registered",
         html: `
           <div style="font-family: Arial, sans-serif; padding:20px; max-width:600px; margin:auto; background:#fff; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-            <h2 style="color:#27ae60; text-align:center;">🎉 Successfully Registered!</h2>
+            <h2 style="color:#27ae60; text-align:center;">Successfully Registered!</h2>
             <p style="font-size:16px; color:#333;">Hi <strong>${firstname}</strong>,</p>
             <p style="font-size:15px; color:#555;">
               Congratulations! Your email <strong>${normalizedEmail}</strong> has been successfully registered with Maxiwise Learning.
             </p>
             <p style="font-size:15px; color:#555;">
-              You can now login using your registered email & password to start your journey 🚀.
+              You can now login using your registered email & password to start your journey.
             </p>
             <p style="font-size:13px; color:#999; text-align:center; margin-top:20px;">
               © ${new Date().getFullYear()} Maxiwise Learning. All rights reserved.

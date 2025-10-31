@@ -1,29 +1,29 @@
-    let express=require('express');
-    const { otpsend } = require('../../Controllers/Webiste Controllers/Authentication Controller/otpSend');
-    const { otpverify } = require('../../Controllers/Webiste Controllers/Authentication Controller/otpVerify');
-    const { googleRegister } = require('../../Controllers/Webiste Controllers/Authentication Controller/googleRegiter');
+        let express=require('express');
+        const { otpsend } = require('../../Controllers/Webiste Controllers/Authentication Controller/otpSend');
+        const { otpverify } = require('../../Controllers/Webiste Controllers/Authentication Controller/otpVerify');
+        const { googleRegister } = require('../../Controllers/Webiste Controllers/Authentication Controller/googleRegiter');
 
-    const { resetpassword } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassword');
-    const { loginController } = require('../../Controllers/Webiste Controllers/Authentication Controller/login');
-const { editProfile } = require('../../Controllers/Webiste Controllers/Authentication Controller/editProfile');
-const { resetotp } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassOtp');
+        const { resetpassword } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassword');
+        const { loginController } = require('../../Controllers/Webiste Controllers/Authentication Controller/login');
+    const { editProfile } = require('../../Controllers/Webiste Controllers/Authentication Controller/editProfile');
+    const { resetotp } = require('../../Controllers/Webiste Controllers/Authentication Controller/resetPassOtp');
 
 
 
-    let authentication=express.Router();
+        let authentication=express.Router();
 
-    authentication.post('/otp-send',otpsend)  //localhost:8000/website/auth/otp-send
+        authentication.post('/otp-send',otpsend)  //localhost:8000/website/auth/otp-send
 
-    authentication.post('/otp-verify',otpverify)  //localhost:8000/website/auth/otp-verify
+        authentication.post('/otp-verify',otpverify)  //localhost:8000/website/auth/otp-verify
 
-    authentication.post('/google-register',googleRegister)  //localhost:8000/website/auth/google-register
+        authentication.post('/google-register',googleRegister)  //localhost:8000/website/auth/google-register
 
-    authentication.post('/edit-profile',editProfile)  //localhost:8000/website/auth/edit-profile
+        authentication.post('/edit-profile',editProfile)  //localhost:8000/website/auth/edit-profile
 
-    authentication.post('/reset-otp-send',resetotp)  //localhost:8000/website/auth/reset-otp-send
+        authentication.post('/reset-otp-send',resetotp)  //localhost:8000/website/auth/reset-otp-send
 
-    authentication.post('/reset-password',resetpassword)  //localhost:8000/website/auth/reset-password
+        authentication.post('/reset-password',resetpassword)  //localhost:8000/website/auth/reset-password
 
-    authentication.post('/:loginMethod/login', loginController) //localhost:8000/website/auth/:loginMethod/login
+        authentication.post('/:loginMethod/login', loginController) //localhost:8000/website/auth/:loginMethod/login
 
-    module.exports={authentication};
+        module.exports={authentication};
